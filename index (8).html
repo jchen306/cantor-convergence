@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conference 1x1s</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F3F5F8; --surface:#FFFFFF; --surface-2:#E9EDF3; --ink:#17213A; --ink-2:#55627A; --ink-3:#8A94A8;
+  --rule:#D6DCE6; --rule-2:#E7EBF1; --grid:#EEF1F5; --accent:#17213A; --accent-ink:#FFFFFF;
+  --now:#D23B3B; --warn-bg:#FFF4D6; --warn-ink:#6B4E00; --focus:#2F6FED;
+  --s1:#1E6F8E; --s2:#B8651B; --s3:#6B4C9A; --s4:#2E7D4F; --s5:#A33A5E; --s6:#5B6B2E; --s0:#9AA3B5;
+  --shadow:0 12px 32px rgba(23,33,58,.14);
+  --label-w:184px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121722; --surface:#1A2130; --surface-2:#222B3C; --ink:#E7EBF3; --ink-2:#A9B3C6; --ink-3:#6F7A91;
+    --rule:#2E3850; --rule-2:#273047; --grid:#1F2737; --accent:#E7EBF3; --accent-ink:#121722;
+    --now:#FF6B6B; --warn-bg:#3A2F10; --warn-ink:#F3D27A; --focus:#7FA8FF;
+    --s1:#4FA3C7; --s2:#E0924A; --s3:#A98BD6; --s4:#5FB381; --s5:#D86E92; --s6:#9BB05A; --s0:#6F7A91;
+    --shadow:0 12px 32px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121722; --surface:#1A2130; --surface-2:#222B3C; --ink:#E7EBF3; --ink-2:#A9B3C6; --ink-3:#6F7A91;
+  --rule:#2E3850; --rule-2:#273047; --grid:#1F2737; --accent:#E7EBF3; --accent-ink:#121722;
+  --now:#FF6B6B; --warn-bg:#3A2F10; --warn-ink:#F3D27A; --focus:#7FA8FF;
+  --s1:#4FA3C7; --s2:#E0924A; --s3:#A98BD6; --s4:#5FB381; --s5:#D86E92; --s6:#9BB05A; --s0:#6F7A91;
+  --shadow:0 12px 32px rgba(0,0,0,.45);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px; line-height:1.45; font-variant-numeric:tabular-nums;
+  display:flex; flex-direction:column;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+header{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:9; background:var(--surface);
+  border-bottom:1px solid var(--rule); padding:10px 16px 0;
+}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+h1 small{font-weight:400;color:var(--ink-2);margin-left:8px;font-size:14px}
+.days{display:flex;gap:2px;margin-top:6px}
+.days button{
+  background:none;border:0;border-bottom:3px solid transparent;padding:8px 10px 10px;font-size:15px;color:var(--ink-2);
+}
+.days button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--rule)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;flex:1 1 auto;min-width:200px}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;border:1px solid var(--rule);background:var(--surface);
+  border-radius:999px;padding:5px 11px 5px 8px;font-size:14px;color:var(--ink-2)
+}
+.chip .dot{width:10px;height:10px;border-radius:50%;background:var(--c,var(--ink-3))}
+.chip[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);background:var(--surface-2);font-weight:500}
+.search{flex:0 1 220px;min-width:140px;border:1px solid var(--rule);border-radius:8px;padding:7px 10px;background:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg button{background:var(--surface);border:0;padding:6px 12px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--surface-2);color:var(--ink);font-weight:500}
+.primary{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 14px;font-weight:500;white-space:nowrap}
+.primary[disabled]{opacity:.5;cursor:default}
+.ghost{background:none;border:1px solid var(--rule);border-radius:8px;padding:7px 12px;color:var(--ink)}
+.banner{padding:8px 16px;font-size:14px;background:var(--warn-bg);color:var(--warn-ink)}
+.banner b{font-weight:600}
+.note{padding:8px 16px;font-size:13px;color:var(--ink-2)}
+main{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+
+/* ---------- timeline ---------- */
+.tl{position:relative;overflow:auto;flex:1 1 auto;background:var(--surface);border-bottom:1px solid var(--rule)}
+.tl-inner{position:relative;display:grid;grid-template-columns:var(--label-w) 1fr;min-width:max-content;align-items:start}
+.tl-head{display:contents}
+.tl-head .corner{position:sticky;left:0;top:0;z-index:6;background:var(--surface);border-bottom:1px solid var(--rule);border-right:1px solid var(--rule);height:34px}
+.tl-head .axis{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--rule);height:34px}
+.axis span{position:absolute;top:8px;margin-left:6px;font-size:13px;color:var(--ink-2)}
+.row{display:contents}
+.row .label{
+  position:sticky;left:0;z-index:3;background:var(--surface);border-right:1px solid var(--rule);border-bottom:1px solid var(--rule-2);
+  padding:4px 12px;font-weight:500;font-size:14px;line-height:1.25;display:flex;flex-direction:column;justify-content:center;gap:2px;width:var(--label-w);overflow:hidden
+}
+.row .label span,.row .label small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .label small{font-weight:400;color:var(--ink-3);font-size:12px}
+.row .lanes{position:relative;border-bottom:1px solid var(--rule-2);
+  background-image:linear-gradient(to right,var(--grid) 1px,transparent 1px);background-size:var(--hour-w) 100%;
+}
+.bar{
+  position:absolute;height:calc(var(--lane-h) - 6px);top:3px;border-radius:5px;background:var(--c,var(--s0));color:#fff;
+  padding:4px 8px;font-size:13px;line-height:1.3;overflow:hidden;border:0;text-align:left;display:flex;flex-direction:column;justify-content:center;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.bar b,.bar .t{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar b{font-weight:600}
+.bar .t{opacity:.85;font-size:12px}
+.bar.multi::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--c2)}
+.bar.unmapped{background:repeating-linear-gradient(135deg,var(--s0),var(--s0) 6px,#B9C0CE 6px,#B9C0CE 12px);color:var(--ink)}
+.bar:hover{filter:brightness(1.08)}
+.now{position:absolute;top:0;bottom:0;width:2px;background:var(--now);z-index:2;pointer-events:none}
+.now::before{content:"";position:absolute;top:-1px;left:-4px;width:10px;height:10px;border-radius:50%;background:var(--now)}
+.dayhead{display:contents}
+.dayhead .label{position:sticky;left:0;z-index:3;background:var(--surface-2);border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:0 12px;display:flex;align-items:center;font-weight:600;font-size:13px;color:var(--ink-2);width:var(--label-w)}
+.dayhead .lanes{background:var(--surface-2);border-bottom:1px solid var(--rule);height:30px}
+.listday{font-size:14px;font-weight:600;color:var(--ink-2);margin:18px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--rule)}
+.empty{padding:48px 16px;text-align:center;color:var(--ink-2)}
+.empty h2{font-size:17px;font-weight:600;color:var(--ink);margin:0 0 6px}
+
+/* ---------- list ---------- */
+.list{padding:8px 16px 24px;background:var(--surface);flex:1 1 auto;overflow:auto}
+.slot{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule-2)}
+.slot .time{font-weight:600;font-size:14px;padding-top:9px}
+.slot .time small{display:block;font-weight:400;color:var(--ink-3);font-size:12px}
+.card{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;padding:8px 10px;border-radius:8px}
+.card:hover{background:var(--surface-2)}
+.card .swatch{flex:0 0 5px;align-self:stretch;border-radius:3px;background:var(--c,var(--s0));margin-top:2px}
+.card .who{font-weight:600}
+.card .meta{color:var(--ink-2);font-size:14px}
+.card .cov{color:var(--ink-3);font-size:13px}
+
+/* ---------- detail sheet ---------- */
+.sheet{position:fixed;z-index:20;background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column;
+  right:0;top:env(safe-area-inset-top,0px);bottom:0;width:min(420px,100%);transform:translateX(100%);transition:transform .22s ease;}
+.sheet[data-open="true"]{transform:none}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 10px;border-bottom:1px solid var(--rule)}
+.sheet-head h2{margin:0;font-size:17px;line-height:1.3}
+.sheet-head .x{background:none;border:0;font-size:22px;line-height:1;color:var(--ink-2);padding:0 2px}
+.sheet-body{padding:12px 18px 20px;overflow:auto}
+.sheet dl{margin:0;display:grid;grid-template-columns:136px 1fr;gap:10px 12px;font-size:14px}
+.sheet dt{color:var(--ink-3)}
+.sheet dd{margin:0;overflow-wrap:anywhere}
+.sheet dd.strong{font-weight:600;color:var(--ink)}
+.sheet a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.sheet .call{margin-top:16px;padding:12px 14px;border-left:3px solid var(--now);background:var(--surface-2);border-radius:0 8px 8px 0;font-size:14px}
+.sheet .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.scrim{position:fixed;inset:0;z-index:19;background:rgba(10,14,24,.3);opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim[data-open="true"]{opacity:1;pointer-events:auto}
+
+/* ---------- admin ---------- */
+.admin{border-top:1px solid var(--rule);background:var(--bg);padding:14px 16px 20px}
+.admin summary{cursor:pointer;font-weight:500;color:var(--ink-2)}
+.admin .drop{margin-top:10px;border:1.5px dashed var(--rule);border-radius:10px;padding:18px;text-align:center;color:var(--ink-2);background:var(--surface)}
+.admin .drop.over{border-color:var(--focus);color:var(--ink)}
+.admin input[type=file]{display:none}
+.admin .report{margin-top:10px;font-size:13px;white-space:pre-wrap;color:var(--ink-2);max-height:220px;overflow:auto;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:10px 12px}
+.admin .row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.histhead{font-size:14px;font-weight:600;color:var(--ink-2);margin:18px 0 6px}
+.ver{border:1px solid var(--rule);border-radius:8px;background:var(--surface);margin-bottom:6px}
+.ver summary{display:flex;gap:10px;align-items:baseline;padding:8px 12px;cursor:pointer;font-size:14px;list-style:none}
+.ver summary::-webkit-details-marker{display:none}
+.ver .when{color:var(--ink-3);white-space:nowrap;font-size:13px;min-width:140px}
+.ver .sum{flex:1}
+.ver .tag{font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--ink-2)}
+.ver.cur summary .sum{font-weight:500}
+.verbody{padding:0 12px 10px;border-top:1px solid var(--rule-2)}
+.verbody pre{margin:8px 0 0;white-space:pre-wrap;font:13px/1.45 "IBM Plex Sans",sans-serif;color:var(--ink-2)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--accent);color:var(--accent-ink);
+  padding:10px 16px;border-radius:10px;font-size:14px;z-index:30;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width:720px){
+  :root{--label-w:118px}
+  h1 small{display:none}
+  .controls{padding:8px 12px}
+  .search{flex-basis:100%}
+  .sheet{top:auto;left:0;right:0;bottom:0;width:100%;max-height:86%;border-radius:14px 14px 0 0;transform:translateY(100%);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .slot{grid-template-columns:70px 1fr;gap:6px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1 id="title">Conference meetings</h1>
+    <nav class="days" id="days" aria-label="Day"></nav>
+  </div>
+</header>
+<div class="controls">
+  <div class="chips" id="chips" role="group" aria-label="Salesperson"></div>
+  <input class="search" id="q" type="search" placeholder="Client or company" aria-label="Search client or company">
+  <div class="seg" role="group" aria-label="View">
+    <button id="vTimeline" aria-pressed="true">Timeline</button>
+    <button id="vList" aria-pressed="false">List</button>
+  </div>
+  <button class="primary" id="addCal" hidden>Add to Outlook</button>
+</div>
+<div id="banner" hidden></div>
+<main id="main"></main>
+<details class="admin" id="admin" hidden>
+  <summary>Update the schedule</summary>
+  <div class="row2" style="margin-top:8px">
+    <button class="ghost" id="exportXlsx">Download the current schedule in Excel</button>
+
+  </div>
+  <div class="drop" id="drop">
+    Drop the edited spreadsheet here, or <label style="text-decoration:underline;cursor:pointer">choose a file<input type="file" id="file" accept=".xlsx,.xlsm,.xls"></label>.
+  </div>
+  <div class="report" id="report" hidden></div>
+  <div class="row2">
+    <button class="primary" id="publish" disabled>Publish to everyone</button>
+    <span id="pubnote" style="font-size:13px;color:var(--ink-2)"></span>
+  </div>
+  <h3 class="histhead">History</h3>
+  <div id="history"></div>
+</details>
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" data-open="false" aria-hidden="true">
+  <div class="sheet-head">
+    <div><h2 id="shTitle"></h2><div id="shSub" style="color:var(--ink-2);font-size:14px;margin-top:3px"></div></div>
+    <button class="x" id="shClose" aria-label="Close">×</button>
+  </div>
+  <div class="sheet-body" id="shBody"></div>
+</aside>
+
+<script>
+/* =========================== pure logic (shared with tests) =========================== */
+const ALIASES = {
+  date:["date","meeting date","day"],
+  start:["start time","start","time","begin","from"],
+  end:["end time","end","finish","to"],
+  room:["room","location","rm","table"],
+  company:["company","issuer","corporate","presenting company","management","mgmt"],
+  ticker:["ticker","symbol"],
+  companyAtt:["company attendees","mgmt attendees","management attendees","corporate attendees"],
+  client:["client firm","client","firm","investor","investor firm","account","fund"],
+  clientAtt:["client attendee(s)","client attendees","client attendee","attendee","attendees","investor attendees","investor attendee","contact","name"],
+  clientEmail:["client email(s)","client email","client emails","email","emails","attendee email"],
+  clientPhone:["client phone","phone","mobile","cell","attendee phone"],
+  analyst:["cantor analyst (covers company)","cantor analyst","analyst","research analyst"],
+  notes:["notes","note","comments","comment"],
+  sales:["salesperson","sales","sales coverage","coverage","sales rep","rep"],
+  salesEmail:["salesperson email","sales email","email"],
+  salesMobile:["salesperson mobile","sales mobile","mobile","phone"],
+  aliases:["also known as","aka","aliases","alias","other names"],
+  role:["title / pod","title/pod","title","pod","role"],
+};
+const norm = s => String(s ?? "").trim().toLowerCase().replace(/[\s_]+/g," ");
+const normKey = s => norm(s).replace(/[^a-z0-9 ]/g,"").replace(/\b(llc|lp|inc|ltd|llp|co|corp|plc)\b/g,"").replace(/\s+/g," ").trim();
+const pad2 = n => String(n).padStart(2,"0");
+
+function mapHeaders(row){
+  const hs = row.map(norm), found = {};
+  for (const [field,names] of Object.entries(ALIASES)){
+    for (const n of names){ const i = hs.indexOf(n); if (i>=0 && !Object.values(found).includes(i)){ found[field]=i; break; } }
+  }
+  return found;
+}
+function readTable(rows){
+  const hi = rows.findIndex(r => r && r.some(c => c!==null && c!==undefined && c!==""));
+  if (hi<0) return {cols:{},data:[],first:1};
+  const cols = mapHeaders(rows[hi]); const data=[];
+  for (let i=hi+1;i<rows.length;i++){
+    const r = rows[i]; if (!r || !r.some(c => c!==null && c!==undefined && c!=="")) continue;
+    const o={}; for (const [f,ci] of Object.entries(cols)) o[f]= r[ci] ?? null; o._row=i+1; data.push(o);
+  }
+  return {cols,data,first:hi+2};
+}
+function parseDate(v){
+  if (v===null||v===undefined||v==="") return null;
+  if (v instanceof Date && !isNaN(v)) return `${v.getFullYear()}-${pad2(v.getMonth()+1)}-${pad2(v.getDate())}`;
+  if (typeof v==="number" && typeof XLSX!=="undefined"){ const d=XLSX.SSF.parse_date_code(v); return d?`${d.y}-${pad2(d.m)}-${pad2(d.d)}`:null; }
+  const s=String(v).trim().replace(/^(mon|tue|wed|thu|fri|sat|sun)[a-z]*,?\s+/i,"");
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${pad2(m[2])}-${pad2(m[3])}`;
+  m=s.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/); if (m){ let y=m[3]?+m[3]:new Date().getFullYear(); if(y<100)y+=2000; return `${y}-${pad2(m[1])}-${pad2(m[2])}`; }
+  const months=["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+  m=s.toLowerCase().match(/^([a-z]{3})[a-z]*\.?\s+(\d{1,2})(?:,?\s+(\d{4}))?/); if (m && months.includes(m[1])) { const y=m[3]?+m[3]:new Date().getFullYear(); return `${y}-${pad2(months.indexOf(m[1])+1)}-${pad2(m[2])}`; }
+  m=s.toLowerCase().match(/^(\d{1,2})[- ]([a-z]{3})[a-z]*[- ](\d{2,4})/); if (m && months.includes(m[2])) { let y=+m[3]; if(y<100)y+=2000; return `${y}-${pad2(months.indexOf(m[2])+1)}-${pad2(m[1])}`; }
+  const d=new Date(s); return isNaN(d)?null:`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+function parseTime(v){
+  if (v===null||v===undefined||v==="") return null;
+  if (v instanceof Date && !isNaN(v)) return `${pad2(v.getHours())}:${pad2(v.getMinutes())}`;
+  if (typeof v==="number"){ const secs=Math.round(((v%1)+1)%1*86400); return `${pad2(Math.floor(secs/3600))}:${pad2(Math.floor(secs%3600/60))}`; }
+  let s=String(v).trim().toLowerCase().split(/\s*[-–—]\s*|\s+to\s+/)[0].replace(/[.\s]/g,"");
+  const m=s.match(/^(\d{1,2})(?::?(\d{2}))?(am|pm)?$/); if(!m) return null;
+  let h=+m[1], mi=+(m[2]||0); const ap=m[3];
+  if (ap==="pm"&&h!==12) h+=12; if (ap==="am"&&h===12) h=0; if (!ap&&h<7) h+=12;
+  if (h>23||mi>59) return null; return `${pad2(h)}:${pad2(mi)}`;
+}
+const toMin = hm => { const [h,m]=hm.split(":").map(Number); return h*60+m; };
+const fromMin = n => `${pad2(Math.floor(n/60)%24)}:${pad2(n%60)}`;
+function hashId(s){ let h1=0x811c9dc5,h2=0x01000193; for (let i=0;i<s.length;i++){ const c=s.charCodeAt(i); h1=Math.imul(h1^c,16777619)>>>0; h2=Math.imul(h2^c,2246822519)>>>0; } return h1.toString(16).padStart(8,"0")+h2.toString(16).padStart(8,"0"); }
+
+const DEFAULT_CONF = {name:"Conference", tz:"America/New_York", defaultLen:40, startOff:0, endOff:0, fuLen:0, style:"two", title:""};
+const pageTitle = conf => conf.title || (conf.name.replace(/\s*conference\s*/i," ").trim()+" Meetings");
+
+/** Workbook (SheetJS) -> {conf, meetings, coverage, issues, warnings} */
+function parseWorkbook(wb){
+  const sheets={}; for (const n of wb.SheetNames) sheets[norm(n)]=n;
+  const pick=(...names)=>{ for (const n of names) if (sheets[n]) return wb.Sheets[sheets[n]]; return null; };
+  const wsM=pick("meetings","1x1s","1x1","schedule","meeting schedule"), wsC=pick("coverage","sales coverage","clients","client coverage"), wsS=pick("settings","config");
+  if (!wsM||!wsC) throw new Error("Need a Meetings tab and a Coverage tab (Schedule / Sales Coverage also work).");
+  const grid=ws=>XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,blankrows:false});
+  const conf={...DEFAULT_CONF};
+  if (wsS){ for (const r of grid(wsS)){ if(!r||r[0]==null||r[1]==null||r[1]==="") continue; const k=norm(r[0]), v=r[1];
+    if (k==="conference name") conf.name=String(v); else if (k==="timezone") conf.tz=String(v).trim();
+    else if (k==="default meeting length (minutes)") conf.defaultLen=+v||40; else if (k==="start reminder (minutes before start)") conf.startOff=+v||0;
+    else if (k==="end reminder (minutes before end)") conf.endOff=+v||0; else if (k==="follow-up block length (minutes)") conf.fuLen=Number.isFinite(+v)?Math.max(0,+v):0;
+    else if (k==="reminder style") conf.style=(["call","end","two"].find(x=>norm(v).startsWith(x))||"two");
+    else if (k==="page title") conf.title=String(v).trim(); } }
+  try { new Intl.DateTimeFormat("en-US",{timeZone:conf.tz}); } catch { conf.tz=DEFAULT_CONF.tz; }
+  const M=readTable(grid(wsM)), C=readTable(grid(wsC));
+  const issues=[], warnings=[];
+  for (const f of ["date","start","company"]) if (!(f in M.cols)) throw new Error(`Meetings tab has no column for “${f}”. Rename the header or add an alias.`);
+  if (!("client" in M.cols) && !("clientAtt" in M.cols)) throw new Error("Meetings tab needs a Client Firm or Client Attendees column.");
+  if (!("client" in C.cols)||!("sales" in C.cols)) throw new Error("Coverage tab needs Client Firm and Salesperson columns.");
+  const coverage=[];
+  for (const r of C.data){ if(!r.client||!r.sales) continue; coverage.push({client:String(r.client).trim(), aliases:String(r.aliases??"").split(/[;,/]/).map(a=>a.trim()).filter(Boolean), contact:String(r.clientAtt??"").trim(), role:String(r.role??"").trim(), sales:String(r.sales).trim(), email:String(r.salesEmail??"").trim(), notes:String(r.notes??"").trim()}); }
+  const L0=coverageLookup(coverage);
+  const seen=new Set(), meetings=[];
+  for (const m of M.data){
+    let client=String(m.client??"").trim(); const company=String(m.company??"").trim(), row=`Meetings row ${m._row}`, att=String(m.clientAtt??"").trim();
+    if (!company||(!client&&!att)){ issues.push(`${row}: missing company, or no client firm/attendees – skipped.`); continue; }
+    if (!client){ const r=L0("",att); client = r.firms.length===1 ? r.firms[0] : att; }
+    const date=parseDate(m.date), start=parseTime(m.start);
+    if (!date||!start){ issues.push(`${row} (${client} x ${company}): could not read date/start “${m.date ?? ""}” / “${m.start ?? ""}” – skipped.`); continue; }
+    let end=parseTime(m.end); if (!end) end=fromMin(toMin(start)+conf.defaultLen);
+    if (toMin(end)<=toMin(start)){ issues.push(`${row} (${client} x ${company}): end ${end} is not after start ${start} – skipped.`); continue; }
+    const key=[date,start,normKey(client),norm(company)].join("|");
+    if (seen.has(key)){ warnings.push(`${row}: duplicate of an earlier row (${client} x ${company}) – skipped.`); continue; } seen.add(key);
+    const S=v=>String(v??"").trim();
+    meetings.push({id:hashId(key), date, start, end, company, companyAtt:S(m.companyAtt), client, clientAtt:att, salesOverride:S(m.sales), notes:S(m.notes)});
+  }
+  const noted=new Set();
+  for (const mt of meetings){ if (mt.salesOverride) continue; const r=L0(mt.client, mt.clientAtt);
+    if (!r.rows.length) issues.push(`No coverage for client “${mt.client}” (${mt.company}, ${mt.date} ${mt.start})${r.note?" – "+r.note:""} – nobody gets a reminder.`);
+    else if (r.note && !noted.has(r.note)){ noted.add(r.note); warnings.push(r.note); } }
+  const byClient={}; for (const mt of meetings) (byClient[normKey(mt.client)] ??= []).push(mt);
+  for (const lst of Object.values(byClient)){ lst.sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+    for (let i=1;i<lst.length;i++){ const a=lst[i-1], b=lst[i]; if (a.date===b.date && toMin(b.start)<toMin(a.end)) warnings.push(`${a.client} looks double-booked on ${a.date}: ${a.company} (${a.start}–${a.end}) overlaps ${b.company} (${b.start}).`); } }
+  meetings.sort((a,b)=>(a.date+a.start+a.client).localeCompare(b.date+b.start+b.client));
+  return {conf, meetings, coverage, issues, warnings};
+}
+
+/** coverage key (firm or alias) -> rows; returns lookup(clientName) -> {rows, note} */
+function coverageLookup(coverage){
+  const map={};
+  for (const c of coverage) for (const n of [c.client, ...(c.aliases||[])]){ const k=normKey(n); if (k) (map[k] ??= []).push(c); }
+  const byAtt=att=>{ const txt=String(att||"").toLowerCase(); if(!txt.trim()) return {rows:[],firms:[]};
+    const rows=coverage.filter(c=>c.contact && txt.includes(c.contact.toLowerCase())); return {rows, firms:[...new Set(rows.map(c=>c.client))]}; };
+  return function(client, attendees){
+    const mk=normKey(client);
+    if (mk && map[mk]) return {rows:map[mk], note:null, firms:[map[mk][0].client]};
+    const cands=mk?Object.keys(map).filter(k => mk.startsWith(k+" ") || k.startsWith(mk+" ") || (k.length>=6 && mk.includes(k))).sort((a,b)=>b.length-a.length):[];
+    if (cands.length){
+      const teams=new Set(cands.map(k => map[k].map(c=>c.sales).sort().join("|")));
+      if (teams.size===1) return {rows:map[cands[0]], note:`“${client}” matched coverage entry “${cands[0]}”`, firms:[map[cands[0]][0].client]};
+      return {rows:[], note:`“${client}” matches several coverage entries (${cands.join(", ")}) – add it to “Also known as” on the right row`, firms:[]};
+    }
+    const a=byAtt(attendees); const teams=new Set(a.rows.map(c=>c.sales));
+    if (teams.size===1) return {rows:a.rows, note:`“${client||attendees}” matched via attendee (${a.firms.join(", ")})`, firms:a.firms};
+    if (teams.size>1) return {rows:[], note:`attendees “${attendees}” map to several salespeople (${[...teams].join(", ")})`, firms:a.firms};
+    return {rows:[], note:null, firms:[]};
+  };
+}
+/** attach sales coverage + colors */
+function joinCoverage(data){
+  const people=[]; const idx={};
+  for (const c of data.coverage){ if(!(c.sales in idx)){ idx[c.sales]=people.length; people.push({name:c.sales,email:c.email,mobile:c.mobile,color:`var(--s${(people.length%6)+1})`}); } }
+  const L=coverageLookup(data.coverage);
+  const byName={}; for (const p of people) byName[norm(p.name)]=p;
+  const meetings=data.meetings.map(m=>{
+    if (m.salesOverride){ let p=byName[norm(m.salesOverride)]; if(!p){ p={name:m.salesOverride,email:"",mobile:"",color:`var(--s${(people.length%6)+1})`}; people.push(p); byName[norm(p.name)]=p; } return {...m, sales:[p]}; }
+    return {...m, sales: [...new Set(L(m.client, m.clientAtt).rows.map(c=>people[idx[c.sales]]))]};
+  });
+  return {people, meetings};
+}
+
+/* ---- timezone + ics ---- */
+function tzOffsetMs(utcMs,tz){
+  const p=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:tz,hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"}).formatToParts(new Date(utcMs)).map(x=>[x.type,x.value]));
+  return Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute,+p.second)-utcMs;
+}
+function zonedToUtc(ymd,hm,tz){
+  const [y,mo,d]=ymd.split("-").map(Number), [h,mi]=hm.split(":").map(Number);
+  const wall=Date.UTC(y,mo-1,d,h,mi); let guess=wall;
+  for (let i=0;i<2;i++) guess=wall-tzOffsetMs(guess,tz);
+  return new Date(guess);
+}
+function nowInTz(tz){
+  const p=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:tz,hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+  return {date:`${p.year}-${p.month}-${p.day}`, min:((+p.hour)%24)*60+(+p.minute)};
+}
+const icsEsc = s => String(s??"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");
+const icsUtc = d => d.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
+function fold(line){ const out=[]; let b=new TextEncoder().encode(line); while(b.length>75){ let cut=75; while(cut>0&&(b[cut]&0xC0)===0x80)cut--; out.push(new TextDecoder().decode(b.slice(0,cut))); b=new Uint8Array([32,...b.slice(cut)]); } out.push(new TextDecoder().decode(b)); return out.join("\r\n"); }
+const fmt12 = hm => { const [h,m]=hm.split(":").map(Number); const ap=h>=12?"PM":"AM"; return `${((h+11)%12)+1}:${pad2(m)} ${ap}`; };
+const fmtAxis = min => { const h=Math.floor(min/60); return `${((h+11)%12)+1}${h>=12?"p":"a"}`; };
+function dayLabel(ymd){ const [y,m,d]=ymd.split("-").map(Number); const dt=new Date(Date.UTC(y,m-1,d)); return `${dt.toLocaleDateString("en-US",{weekday:"short",timeZone:"UTC"})} ${m}/${d}`; }
+
+function eventFields(kind,m,conf){
+  // kind: "meeting" (block, reminder at start) | "end" (block, reminder at END via negative offset) | "call" (block starting at the end)
+  const companyLong=m.company;
+  const startD=zonedToUtc(m.date,m.start,conf.tz), endD=zonedToUtc(m.date,m.end,conf.tz), dur=toMin(m.end)-toMin(m.start);
+  let summary,s0,e0,reminder; const lines=[];
+  if (kind==="call"){
+    s0=endD; e0=new Date(endD.getTime()+conf.fuLen*60000);
+    summary=`[MEETING FINISHED] ${m.client} x ${m.company}`; reminder=conf.endOff;
+    lines.push(`${m.client} is walking out of ${companyLong} now`, "");
+  } else {
+    s0=startD; e0=endD;
+    summary=`${m.client} x ${m.company}`; reminder = kind==="meeting" ? conf.startOff : conf.endOff-dur;
+    lines.push(`${m.client} meeting ${companyLong}`);
+    if (kind==="end") lines.push(`Reminder fires when the meeting ends (${fmt12(m.end)}).`);
+    lines.push("");
+  }
+  if (m.clientAtt) lines.push(`Client attendees: ${m.clientAtt}`); if (m.companyAtt) lines.push(`Company attendees: ${m.companyAtt}`); if (m.notes) lines.push(`Notes: ${m.notes}`);
+  return {summary, body:lines.join("\n"), start:s0, end:e0, reminder, category: kind==="call"?"Conference calls":"Conference meetings", uid:`${m.id}-${kind}@conf-1x1`};
+}
+const trig = min => min>=0 ? `-PT${min}M` : `PT${-min}M`;
+function buildIcs(meetings,conf,calName,styleOverride){
+  const style=styleOverride||conf.style||"two";
+  const kinds={two:["meeting","call"], end:["end"], call:["call"]}[style]||["meeting","call"];
+  const out=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Cantor//Conference Reminders//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH",`X-WR-CALNAME:${icsEsc(calName)}`];
+  const stamp=icsUtc(new Date());
+  for (const m of meetings) for (const kind of kinds){
+    const ev=eventFields(kind,m,conf);
+    out.push("BEGIN:VEVENT",`UID:${ev.uid}`,`DTSTAMP:${stamp}`,`DTSTART:${icsUtc(ev.start)}`);
+    if (ev.end>ev.start) out.push(`DTEND:${icsUtc(ev.end)}`);
+    out.push(`SUMMARY:${icsEsc(ev.summary)}`,`DESCRIPTION:${icsEsc(ev.body)}`,`CATEGORIES:${icsEsc(ev.category)}`,"TRANSP:TRANSPARENT","X-MICROSOFT-CDO-BUSYSTATUS:FREE","CLASS:PUBLIC",
+             "BEGIN:VALARM","ACTION:DISPLAY",`DESCRIPTION:${icsEsc(ev.summary)}`,`TRIGGER:${trig(ev.reminder)}`,"END:VALARM","END:VEVENT");
+  }
+  out.push("END:VCALENDAR");
+  return out.map(fold).join("\r\n")+"\r\n";
+}
+/* ---- diff between two schedules ---- */
+function diffSchedules(oldD,newD){
+  const out={added:[],removed:[],moved:[],changed:[],covAdded:[],covRemoved:[],covChanged:[],settings:[]};
+  const key=m=>`${m.date}|${normKey(m.client)}|${norm(m.company)}`;
+  const byKey=list=>{const o={};for(const m of list)(o[key(m)] ??= []).push(m);return o;};
+  const O=byKey(oldD?.meetings||[]), N=byKey(newD.meetings||[]);
+  const FIELDS=[["start","start"],["end","end"],["clientAtt","client attendees"],["companyAtt","company attendees"],["_sales","salesperson"],["notes","notes"]];
+  // compare the effective salesperson (typed override or coverage match), not the raw cell
+  const eff=(d,m)=>m.salesOverride||[...new Set(coverageLookup(d?.coverage||[])(m.client,m.clientAtt).rows.map(c=>c.sales))].sort().join(", ");
+  for (const m of (oldD?.meetings||[])) m._sales=eff(oldD,m); for (const m of (newD.meetings||[])) m._sales=eff(newD,m);
+  for (const k of new Set([...Object.keys(O),...Object.keys(N)])){
+    const a=(O[k]||[]).slice().sort((x,y)=>x.start.localeCompare(y.start)), b=(N[k]||[]).slice().sort((x,y)=>x.start.localeCompare(y.start));
+    // pair by identical start first, then leftovers in order
+    const used=new Set();
+    for (const nm of b){ const i=a.findIndex((om,j)=>!used.has(j)&&om.start===nm.start); if(i>=0){ used.add(i); const om=a[i]; const diffs=FIELDS.filter(([f])=>f!=="start"&&(om[f]||"")!==(nm[f]||"")).map(([f,l])=>`${l}: ${om[f]||"—"} → ${nm[f]||"—"}`); if(diffs.length) out.changed.push({m:nm,diffs}); nm._paired=true; } }
+    const restOld=a.filter((_,j)=>!used.has(j)), restNew=b.filter(nm=>!nm._paired); b.forEach(nm=>delete nm._paired);
+    const n=Math.min(restOld.length,restNew.length);
+    for (let i=0;i<n;i++){ const om=restOld[i], nm=restNew[i]; const diffs=FIELDS.filter(([f])=>f!=="start"&&f!=="end"&&(om[f]||"")!==(nm[f]||"")).map(([f,l])=>`${l}: ${om[f]||"—"} → ${nm[f]||"—"}`); out.moved.push({m:nm,from:om,diffs}); }
+    for (const om of restOld.slice(n)) out.removed.push(om);
+    for (const nm of restNew.slice(n)) out.added.push(nm);
+  }
+  const covKey=c=>normKey(c.client); const oc={},nc={};
+  for (const c of (oldD?.coverage||[])) (oc[covKey(c)] ??= {client:c.client,sales:new Set(),contacts:new Set()}).sales.add(c.sales), c.contact&&oc[covKey(c)].contacts.add(c.contact);
+  for (const c of (newD.coverage||[])) (nc[covKey(c)] ??= {client:c.client,sales:new Set(),contacts:new Set()}).sales.add(c.sales), c.contact&&nc[covKey(c)].contacts.add(c.contact);
+  for (const k of new Set([...Object.keys(oc),...Object.keys(nc)])){
+    const a=oc[k], b=nc[k];
+    if (!a) out.covAdded.push(`${b.client} → ${[...b.sales].join(", ")}`);
+    else if (!b) out.covRemoved.push(`${a.client} (was ${[...a.sales].join(", ")})`);
+    else { const sa=[...a.sales].sort().join(", "), sb=[...b.sales].sort().join(", ");
+      const addedC=[...b.contacts].filter(x=>!a.contacts.has(x)), removedC=[...a.contacts].filter(x=>!b.contacts.has(x));
+      if (sa!==sb) out.covChanged.push(`${b.client}: ${sa} → ${sb}`);
+      if (addedC.length||removedC.length) out.covChanged.push(`${b.client} contacts: ${[...addedC.map(x=>"+"+x),...removedC.map(x=>"−"+x)].join(", ")}`); }
+  }
+  if (oldD){ for (const k of ["name","tz","defaultLen","startOff","endOff","fuLen","style","title"]) if (String(oldD.conf?.[k]??"")!==String(newD.conf?.[k]??"")) out.settings.push(`${k}: ${oldD.conf?.[k]??"—"} → ${newD.conf?.[k]??"—"}`); }
+  out.count=out.added.length+out.removed.length+out.moved.length+out.changed.length+out.covAdded.length+out.covRemoved.length+out.covChanged.length+out.settings.length;
+  return out;
+}
+/** plain-text lines for a diff; short=true gives a one-line summary */
+function describeChanges(d,short){
+  const t=m=>`${dayLabel(m.date)} ${fmt12(m.start)}`;
+  if (short){ const parts=[]; if(d.added.length)parts.push(`${d.added.length} added`); if(d.removed.length)parts.push(`${d.removed.length} removed`); if(d.moved.length)parts.push(`${d.moved.length} moved`); if(d.changed.length)parts.push(`${d.changed.length} edited`);
+    const cov=d.covAdded.length+d.covRemoved.length+d.covChanged.length; if(cov)parts.push(`${cov} coverage`); if(d.settings.length)parts.push(`${d.settings.length} settings`); return parts.join(", ")||"no changes"; }
+  const L=[];
+  for (const m of d.added) L.push(`+ ${t(m)}  ${m.client} x ${m.company}`);
+  for (const m of d.removed) L.push(`− ${t(m)}  ${m.client} x ${m.company}`);
+  for (const x of d.moved) L.push(`↷ ${x.m.client} x ${x.m.company}: ${t(x.from)}–${fmt12(x.from.end)} → ${t(x.m)}–${fmt12(x.m.end)}`+(x.diffs.length?` (${x.diffs.join("; ")})`:""));
+  for (const x of d.changed) L.push(`✎ ${t(x.m)}  ${x.m.client} x ${x.m.company}: ${x.diffs.join("; ")}`);
+  for (const x of d.covAdded) L.push(`+ coverage  ${x}`);
+  for (const x of d.covRemoved) L.push(`− coverage  ${x}`);
+  for (const x of d.covChanged) L.push(`✎ coverage  ${x}`);
+  for (const x of d.settings) L.push(`✎ setting  ${x}`);
+  return L;
+}
+/* ---- styled Excel export of the current schedule (same layout as the template) ---- */
+function buildWorkbook(d){
+  const H={font:{name:"Arial",bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"1F3864"}},alignment:{horizontal:"center",vertical:"center",wrapText:true},border:{top:{style:"thin",color:{rgb:"BFBFBF"}},bottom:{style:"thin",color:{rgb:"BFBFBF"}},left:{style:"thin",color:{rgb:"BFBFBF"}},right:{style:"thin",color:{rgb:"BFBFBF"}}}};
+  const B={font:{name:"Arial",sz:10},fill:{fgColor:{rgb:"FFF2CC"}},border:H.border};
+  const fmtStyles={}; const styled=f=>f?(fmtStyles[f] ??= {...B,numFmt:f}):B; // one style object per number format (the style table is keyed by object)
+  const sheet=(rows,widths,fmts)=>{ const ws=XLSX.utils.aoa_to_sheet(rows,{cellDates:true}); const range=XLSX.utils.decode_range(ws["!ref"]);
+    for (let R=range.s.r;R<=range.e.r;R++) for (let C=range.s.c;C<=range.e.c;C++){ const ref=XLSX.utils.encode_cell({r:R,c:C}); if(!ws[ref]) ws[ref]={t:"s",v:""}; ws[ref].s=R===0?H:styled(fmts&&fmts[C]); if (R>0&&fmts&&fmts[C]) ws[ref].z=fmts[C]; }
+    ws["!cols"]=widths.map(w=>({wch:w})); ws["!rows"]=[{hpt:30}]; ws["!autofilter"]={ref:ws["!ref"]}; return ws; };
+  const dateCell=ymd=>{const [y,m,dd]=ymd.split("-").map(Number); return new Date(y,m-1,dd);};
+  const timeCell=hm=>toMin(hm)/1440;
+  const M=[["Date","Start Time","End Time","Company","Company Attendees","Client Firm","Client Attendees","Salesperson","Match","Notes"],
+    ...d.meetings.map(m=>[dateCell(m.date),timeCell(m.start),timeCell(m.end),m.company,m.companyAtt,m.client,m.clientAtt,m.salesOverride||"",null,m.notes])];
+  const seen=new Set();
+  const C=[["Client Firm","Also known as","Contact","Title / Pod","Salesperson","Salesperson Email","Notes"],
+    ...d.coverage.map(c=>[c.client,(c.aliases||[]).join("; "),c.contact||"",c.role||"",c.sales,c.email||"",c.notes||""])];
+  const S=[["Setting","Value"],["Conference Name",d.conf.name],["Page title",pageTitle(d.conf)],["Timezone",d.conf.tz],["Default meeting length (minutes)",d.conf.defaultLen],
+    ["Start reminder (minutes before start)",d.conf.startOff],["End reminder (minutes before end)",d.conf.endOff],["Follow-up block length (minutes)",d.conf.fuLen],["Reminder style",d.conf.style||"two"]];
+  const wb=XLSX.utils.book_new();
+  const wsM=sheet(M,[12,11,11,24,30,24,30,16,30,28],{0:"yyyy-mm-dd",1:"h:mm AM/PM",2:"h:mm AM/PM"});
+  // Salesperson / Match fill themselves from Coverage (same formulas as the template); rows with a typed salesperson keep it
+  const NR=Math.max(d.meetings.length+150, 200), wsX={}; const CF="Coverage!$A$2:$A$400",CA="Coverage!$B$2:$B$400",CC="Coverage!$C$2:$C$400",CS="Coverage!$E$2:$E$400";
+  const auto={font:{name:"Arial",sz:10,italic:true,color:{rgb:"1F3864"}},fill:{fgColor:{rgb:"F2F2F2"}},border:H.border};
+  ["By firm","By alias","By prefix","By attendee","Split","Salesperson","Match label"].forEach((h,i)=>wsX[XLSX.utils.encode_cell({r:0,c:i})]={t:"s",v:h});
+  for (let r=2;r<=NR+1;r++){
+    const firm=`TRIM(Meetings!F${r})`, att=`TRIM(Meetings!G${r})`;
+    wsX["A"+r]={t:"s",f:`IF(${firm}="","",IFERROR(INDEX(${CS},MATCH(${firm},${CF},0)),""))`};
+    wsX["B"+r]={t:"s",f:`IF(${firm}="","",IFERROR(INDEX(${CS},MATCH(1,ISNUMBER(SEARCH(";"&${firm}&";",";"&SUBSTITUTE(${CA},"; ",";")&";"))*(${CA}<>""),0)),""))`,F:`B${r}:B${r}`};
+    wsX["C"+r]={t:"s",f:`IF(${firm}="","",IFERROR(INDEX(${CS},MATCH(1,(${CF}<>"")*(((LEFT(${firm}&" ",LEN(${CF})+1)=${CF}&" ")+(LEFT(${CF}&" ",LEN(${firm})+1)=${firm}&" "))>0),0)),""))`,F:`C${r}:C${r}`};
+    wsX["D"+r]={t:"s",f:`IF(${att}="","",IFERROR(INDEX(${CS},MATCH(1,(${CC}<>"")*ISNUMBER(SEARCH(${CC},${att})),0)),""))`,F:`D${r}:D${r}`};
+    wsX["E"+r]={t:"b",f:`IF(D${r}="",FALSE,SUMPRODUCT((${CC}<>"")*ISNUMBER(SEARCH(${CC},${att}))*(${CS}<>D${r}))>0)`,F:`E${r}:E${r}`};
+    wsX["F"+r]={t:"s",f:`IF(A${r}<>"",A${r},IF(B${r}<>"",B${r},IF(C${r}<>"",C${r},IF(E${r},"",D${r}))))`};
+    wsX["G"+r]={t:"s",f:`IF(${firm}&${att}="","",IF(A${r}<>"","firm",IF(B${r}<>"","alias",IF(C${r}<>"","prefix - check firm",IF(E${r},"CHECK: attendees map to several salespeople",IF(D${r}<>"","attendee - check firm","CHECK: no match"))))))`};
+    const typed = r-2 < d.meetings.length && d.meetings[r-2].salesOverride;
+    wsM["H"+r]= typed ? {t:"s",v:d.meetings[r-2].salesOverride,s:B} : {t:"s",f:`Match!F${r}`,s:auto};
+    wsM["I"+r]={t:"s",f:`Match!G${r}`,s:auto};
+    for (const c of "ABCDEFGJ") if(!wsM[c+r]) wsM[c+r]={t:"s",v:"",s:B};
+    if (r-2>=d.meetings.length){ wsM["A"+r].s=styled("yyyy-mm-dd"); wsM["B"+r].s=styled("h:mm AM/PM"); wsM["C"+r].s=styled("h:mm AM/PM"); }
+  }
+  wsM["!ref"]=`A1:J${NR+1}`; wsM["!autofilter"]={ref:wsM["!ref"]}; wsX["!ref"]=`A1:G${NR+1}`;
+  XLSX.utils.book_append_sheet(wb,wsM,"Meetings");
+  XLSX.utils.book_append_sheet(wb,sheet(C,[20,36,22,18,16,28,44]),"Coverage");
+  XLSX.utils.book_append_sheet(wb,sheet(S,[36,34]),"Settings");
+  XLSX.utils.book_append_sheet(wb,wsX,"Match");
+  wb.Workbook={Sheets:[{name:"Meetings"},{name:"Coverage"},{name:"Settings"},{name:"Match",Hidden:1}],CalcPr:{fullCalcOnLoad:true}};
+  return XLSX.write(wb,{type:"array",bookType:"xlsx",cellDates:true});
+}
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?(c>>>1)^0xEDB88320:c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC_T[(c^b[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+/** one-file ZIP, stored (no compression) */
+function zipSingle(name,text){
+  const enc=new TextEncoder(), data=enc.encode(text), nm=enc.encode(name), crc=crc32(data);
+  const d=new Date(), dt=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF, dd=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
+  const lh=new Uint8Array(30+nm.length), cd=new Uint8Array(46+nm.length), eo=new Uint8Array(22);
+  const w=(a,o,v,n)=>{for(let i=0;i<n;i++)a[o+i]=(v>>>(8*i))&0xFF;};
+  w(lh,0,0x04034b50,4);w(lh,4,20,2);w(lh,6,0x0800,2);w(lh,8,0,2);w(lh,10,dt,2);w(lh,12,dd,2);w(lh,14,crc,4);w(lh,18,data.length,4);w(lh,22,data.length,4);w(lh,26,nm.length,2);w(lh,28,0,2);lh.set(nm,30);
+  w(cd,0,0x02014b50,4);w(cd,4,20,2);w(cd,6,20,2);w(cd,8,0x0800,2);w(cd,10,0,2);w(cd,12,dt,2);w(cd,14,dd,2);w(cd,16,crc,4);w(cd,20,data.length,4);w(cd,24,data.length,4);w(cd,28,nm.length,2);w(cd,30,0,2);w(cd,32,0,2);w(cd,34,0,2);w(cd,36,0,2);w(cd,38,0,4);w(cd,42,0,4);cd.set(nm,46);
+  const cdOff=lh.length+data.length;
+  w(eo,0,0x06054b50,4);w(eo,4,0,2);w(eo,6,0,2);w(eo,8,1,2);w(eo,10,1,2);w(eo,12,cd.length,4);w(eo,16,cdOff,4);w(eo,20,0,2);
+  const out=new Uint8Array(cdOff+cd.length+eo.length); out.set(lh,0); out.set(data,lh.length); out.set(cd,cdOff); out.set(eo,cdOff+cd.length); return out;
+}
+if (typeof module!=="undefined") module.exports={parseWorkbook,joinCoverage,buildIcs,eventFields,zonedToUtc,parseTime,parseDate,zipSingle,pageTitle,diffSchedules,describeChanges,buildWorkbook};
+
+/* =========================== page =========================== */
+if (typeof document!=="undefined") (function(){
+  const $=id=>document.getElementById(id);
+  const state={data:null, live:null, joined:null, day:null, sales:"all", q:"", view: window.matchMedia("(max-width:720px)").matches?"list":"timeline", selected:null, pending:null, pendingDiff:null, status:"loading", versions:[]};
+  let caps={db:null,user:null,downloads:null}, unsub=null, nowTimer=null, loadTimer=null;
+
+  /* ----- data in / out ----- */
+  function setData(data, meta){
+    if (!meta?.preview) state.live=data;
+    state.data=data; state.joined=data?joinCoverage(data):null;
+    const days=data?[...new Set(data.meetings.map(m=>m.date))].sort():[];
+    if (state.day===null) state.day = days.length>1 ? "all" : (days[0]||null);
+    if (state.day!=="all" && !days.includes(state.day)) state.day = days.length>1 ? "all" : (days[0]||null);
+    if (state.day==="all" && days.length<2) state.day=days[0]||null;
+    if (state.sales!=="all" && !(state.joined?.people.some(p=>p.name===state.sales))) state.sales="all";
+    const t=data?pageTitle(data.conf):"Conference meetings"; $("title").textContent=t; document.title=t;
+    const b=$("banner"); b.hidden=true; b.className="banner";
+    if (meta?.stale){ b.hidden=false; b.textContent="Showing the last schedule this device saw. It may be out of date."; }
+    renderAll();
+  }
+  async function connect(){
+    caps.user = await claude.use("user").catch(()=>null);
+    caps.downloads = await claude.use("downloads").catch(()=>null);
+    caps.db = await claude.use("db").catch(()=>null);
+    if (caps.user && (await caps.user.canEdit())) $("admin").hidden=false;
+    if (!caps.db){ state.status="nodb"; renderView(); return; }
+    loadTimer=setTimeout(()=>{ if(!state.data) empty("Can’t reach the schedule yet.","Check your connection; this page keeps trying."); },10000);
+    unsub = caps.db.doc("data/schedule").onSnapshot(snap=>{
+      if (!snap.metadata.fromCache) clearTimeout(loadTimer);
+      if (!snap.exists){ state.status="empty"; setData(null); return; }
+      state.status="ready";
+      const d=snap.data(); setData({conf:{...DEFAULT_CONF,...(d.conf||{})}, meetings:d.meetings||[], coverage:d.coverage||[], issues:d.issues||[], warnings:d.warnings||[]}, {sample:!!d.sample, stale:snap.metadata.fromCache});
+    }, err=>{ clearTimeout(loadTimer); if(!state.data){ state.status="error"; renderView(); } });
+  }
+
+  /* ----- filters ----- */
+  function visibleMeetings(){
+    if (!state.joined) return [];
+    const q=state.q.trim().toLowerCase();
+    return state.joined.meetings.filter(m => (state.day==="all" || m.date===state.day)
+      && (state.sales==="all" || m.sales.some(p=>p.name===state.sales))
+      && (!q || m.client.toLowerCase().includes(q) || m.company.toLowerCase().includes(q) || (m.clientAtt||"").toLowerCase().includes(q)));
+  }
+  function mySelection(){ // meetings for the Add-to-calendar button: selected salesperson, selected day tab
+    if (!state.joined) return [];
+    return state.joined.meetings.filter(m => (state.day==="all" || m.date===state.day) && (state.sales==="all" || m.sales.some(p=>p.name===state.sales)));
+  }
+  function weekdayName(ymd){ const [y,m,d]=ymd.split("-").map(Number); return new Date(Date.UTC(y,m-1,d)).toLocaleDateString("en-US",{weekday:"long",timeZone:"UTC"}); }
+
+  /* ----- render ----- */
+  function renderAll(){ renderChips(); renderView(); renderAddButton(); }
+  function renderDays(){
+    const days=state.data?[...new Set(state.data.meetings.map(m=>m.date))].sort():[];
+    $("days").innerHTML="";
+    const tabs=days.map(d=>[d,dayLabel(d)]); if (days.length>1) tabs.push(["all","Both days"]);
+    for (const [d,label] of tabs){ const b=document.createElement("button"); b.setAttribute("role","tab"); b.setAttribute("aria-selected",String(d===state.day)); b.textContent=label; b.onclick=()=>{state.day=d; renderView(); renderAddButton();}; $("days").appendChild(b); }
+  }
+  function renderChips(){
+    const c=$("chips"); c.innerHTML="";
+    const mk=(label,val,color)=>{ const b=document.createElement("button"); b.className="chip"; b.setAttribute("aria-pressed",String(state.sales===val)); if(color){ const d=document.createElement("span"); d.className="dot"; d.style.setProperty("--c",color); b.appendChild(d);} b.appendChild(document.createTextNode(label)); b.onclick=()=>{state.sales=val; renderChips(); renderView(); renderAddButton();}; return b; };
+    c.appendChild(mk("Everyone","all",null));
+    for (const p of (state.joined?.people||[])) c.appendChild(mk(p.name,p.name,p.color));
+  }
+  function renderAddButton(){
+    const b=$("addCal"); const n=mySelection().length;
+    b.hidden=!(caps.downloads && n);
+    const whose = state.sales==="all" ? "all" : `${state.sales.split(" ")[0]}’s`, day = state.day && state.day!=="all" ? weekdayName(state.day)+" " : "";
+    b.textContent = `Add ${whose} ${n} ${day}meeting${n===1?"":"s"} to Outlook`;
+  }
+  function empty(h,p){ $("main").innerHTML=`<div class="empty"><h2>${esc(h)}</h2><div>${esc(p)}</div></div>`; }
+  function renderView(){
+    $("vTimeline").setAttribute("aria-pressed",String(state.view==="timeline")); $("vList").setAttribute("aria-pressed",String(state.view==="list"));
+    renderDays();
+    if (!state.data){
+      if (state.status==="loading") empty("Loading the schedule…","");
+      else if (state.status==="nodb") empty("Sign in to see the schedule.","It’s shared with everyone who can open this page.");
+      else if (state.status==="error") empty("The schedule isn’t available in this view.","");
+      else if (state.status==="static-empty") empty("No schedule file found.","Upload the conference workbook as schedule.xlsx next to this page and reload.");
+      else empty("No schedule loaded yet.", $("admin").hidden?"Check back once the conference grid has been uploaded.":"Upload the conference spreadsheet below to publish it to everyone.");
+      return;
+    }
+    const ms=visibleMeetings();
+    if (!ms.length){ empty("Nothing on this day for that filter.", state.q?"Try a different search.":""); return; }
+    state.view==="timeline"?renderTimeline(ms):renderList(ms);
+  }
+  function laneAssign(items){ // greedy interval packing per row
+    const lanes=[]; items.sort((a,b)=>toMin(a.start)-toMin(b.start));
+    for (const it of items){ let l=lanes.findIndex(end=>end<=toMin(it.start)); if(l<0){l=lanes.length; lanes.push(0);} lanes[l]=toMin(it.end); it._lane=l; }
+    return lanes.length;
+  }
+  function renderTimeline(ms){
+    const conf=state.data.conf, now=nowInTz(conf.tz), mobile=window.matchMedia("(max-width:720px)").matches;
+    const tl=document.createElement("div"); tl.className="tl";
+    $("main").innerHTML=""; $("main").appendChild(tl);
+    const labelW=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--label-w"))||184;
+    const avail=tl.clientWidth-labelW-2;
+    const days=[...new Set(ms.map(m=>m.date))].sort();
+    // one time axis for all days shown, so the blocks line up
+    let t0=Math.min(...ms.map(m=>toMin(m.start))), t1=Math.max(...ms.map(m=>toMin(m.end)));
+    t0=Math.floor(t0/60)*60; t1=Math.ceil(t1/60)*60; if (t1-t0<180) t1=t0+180;
+    const hours=(t1-t0)/60, hourW=Math.max(mobile?140:120, Math.floor(avail/hours)), laneH=48, width=hours*hourW;
+    const inner=document.createElement("div"); inner.className="tl-inner"; inner.style.setProperty("--hour-w",hourW+"px"); inner.style.setProperty("--lane-h",laneH+"px");
+    const head=document.createElement("div"); head.className="tl-head";
+    const corner=document.createElement("div"); corner.className="corner";
+    const axis=document.createElement("div"); axis.className="axis"; axis.style.width=width+"px";
+    for (let t=t0;t<t1;t+=60){ const sp=document.createElement("span"); sp.style.left=((t-t0)/60*hourW)+"px"; sp.textContent=fmtAxis(t); axis.appendChild(sp); }
+    head.append(corner,axis); inner.appendChild(head);
+    let scrollTo=null;
+    for (const day of days){
+      if (days.length>1){ const dh=document.createElement("div"); dh.className="dayhead"; dh.innerHTML=`<div class="label" style="height:30px">${esc(dayLabel(day))}</div><div class="lanes" style="width:${width}px;height:30px"></div>`; inner.appendChild(dh); }
+      const rows={}; for (const m of ms) if (m.date===day) (rows[m.client] ??= []).push(m);
+      for (const client of Object.keys(rows).sort((a,b)=>a.localeCompare(b))){
+        const items=rows[client]; const nl=laneAssign(items);
+        const row=document.createElement("div"); row.className="row";
+        const label=document.createElement("div"); label.className="label";
+        const cov=[...new Set(items.flatMap(m=>m.sales.map(p=>p.name)))];
+        label.innerHTML=`<span>${esc(client)}</span><small>${cov.length?esc(cov.join(", ")):"no coverage"}</small>`;
+        const lanes=document.createElement("div"); lanes.className="lanes"; lanes.style.height=(nl*laneH)+"px"; lanes.style.width=width+"px";
+        label.style.height=(nl*laneH)+"px";
+        for (const m of items){
+          const b=document.createElement("button"); b.className="bar"+(m.sales.length>1?" multi":"")+(m.sales.length?"":" unmapped");
+          b.style.left=((toMin(m.start)-t0)/60*hourW)+"px"; b.style.width=Math.max(((toMin(m.end)-toMin(m.start))/60*hourW)-3,28)+"px"; b.style.top=(m._lane*laneH+3)+"px";
+          const sel = state.sales!=="all" ? m.sales.find(p=>p.name===state.sales) : m.sales[0];
+          if (sel) b.style.setProperty("--c",sel.color); if (m.sales.length>1){ const other=m.sales.find(p=>p!==sel)||m.sales[1]; b.style.setProperty("--c2",other.color); }
+          b.innerHTML=`<b>${esc(m.company)}</b><span class="t">${esc(fmt12(m.start).replace(/ [AP]M/,""))}–${esc(fmt12(m.end).replace(/ [AP]M/,""))}</span>`;
+          b.title=`${m.client} × ${m.company}, ${fmt12(m.start)}–${fmt12(m.end)}`;
+          b.onclick=()=>openSheet(m); lanes.appendChild(b);
+        }
+        if (now.date===day && now.min>=t0 && now.min<=t1){ const n=document.createElement("div"); n.className="now"; n.style.left=((now.min-t0)/60*hourW)+"px"; lanes.appendChild(n); scrollTo=(now.min-t0)/60*hourW; }
+        row.append(label,lanes); inner.appendChild(row);
+      }
+    }
+    tl.appendChild(inner);
+    if (scrollTo!==null) tl.scrollLeft=Math.max(0,scrollTo-tl.clientWidth/2);
+    clearInterval(nowTimer); nowTimer=setInterval(()=>{ if(state.view==="timeline") renderView(); },60000);
+  }
+  function renderList(ms){
+    const conf=state.data.conf, now=nowInTz(conf.tz);
+    const slots={}; for (const m of ms) (slots[m.date+" "+m.start] ??= []).push(m);
+    const list=document.createElement("div"); list.className="list"; let lastDay=null;
+    for (const key of Object.keys(slots).sort()){
+      const [day,start]=key.split(" ");
+      if (state.day==="all" && day!==lastDay){ lastDay=day; const h=document.createElement("h2"); h.className="listday"; h.textContent=dayLabel(day); list.appendChild(h); }
+      const slot=document.createElement("div"); slot.className="slot";
+      const t=document.createElement("div"); t.className="time";
+      const live = now.date===day && now.min>=toMin(start) && now.min<toMin(slots[key][0].end);
+      t.innerHTML=`${esc(fmt12(start).replace(" ",""))}<small>${live?"now":"to "+esc(fmt12(slots[key][0].end).replace(" ",""))}</small>`;
+      const col=document.createElement("div");
+      for (const m of slots[key].sort((a,b)=>a.client.localeCompare(b.client))){
+        const c=document.createElement("button"); c.className="card";
+        const sel = state.sales!=="all" ? m.sales.find(p=>p.name===state.sales) : m.sales[0];
+        const sw=document.createElement("span"); sw.className="swatch"; if (sel) sw.style.setProperty("--c",sel.color);
+        const txt=document.createElement("div");
+        txt.innerHTML=`<div class="who">${esc(m.client)} <span style="font-weight:400;color:var(--ink-2)">meets</span> ${esc(m.company)}</div>`+
+          `<div class="meta">${esc(m.clientAtt||"")}</div>`+
+          `<div class="cov">${m.sales.length?esc(m.sales.map(p=>p.name).join(", ")):"no coverage"}</div>`;
+        c.append(sw,txt); c.onclick=()=>openSheet(m); col.appendChild(c);
+      }
+      slot.append(t,col); list.appendChild(slot);
+    }
+    $("main").innerHTML=""; $("main").appendChild(list);
+  }
+
+  /* ----- detail sheet ----- */
+  function openSheet(m){
+    state.selected=m; const conf=state.data.conf;
+    $("shTitle").textContent=`${m.client} × ${m.company}`;
+    $("shSub").textContent="";
+    const dl=[];
+    const row=(k,v,html,strong)=>{ if(v) dl.push(`<dt>${esc(k)}</dt><dd${strong?' class="strong"':""}>${html||esc(v)}</dd>`); };
+    row("Date", dayLabel(m.date), null, true);
+    row("Time", `${fmt12(m.start)} – ${fmt12(m.end)}`, null, true);
+    row("Client attendees", m.clientAtt);
+    row("Company attendees", m.companyAtt);
+    row("Coverage", m.sales.length?m.sales.map(p=>p.name).join(", "):"none mapped");
+    const known=coverageLookup(state.data.coverage)(m.client).rows.filter(c=>c.contact).map(c=>c.contact+(c.role?" ("+c.role+")":""));
+    row("Known contacts", known.join("; "));
+    row("Notes", m.notes);
+    $("shBody").innerHTML=`<dl>${dl.join("")}</dl>
+      <div class="actions">${caps.downloads?`<button class="ghost" id="shIcs">Add this meeting to Outlook</button>`:""}</div>`;
+    const b=$("shIcs"); if (b) b.onclick=()=>saveIcs([m], `${m.client} x ${m.company}`);
+    $("sheet").dataset.open="true"; $("sheet").setAttribute("aria-hidden","false"); $("scrim").dataset.open="true"; $("shClose").focus();
+  }
+  function closeSheet(){ $("sheet").dataset.open="false"; $("sheet").setAttribute("aria-hidden","true"); $("scrim").dataset.open="false"; }
+  $("shClose").onclick=closeSheet; $("scrim").onclick=closeSheet; document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+
+  /* ----- add to calendar ----- */
+  async function saveIcs(meetings,label){
+    if (!caps.downloads) return;
+    const conf=state.data.conf, who=label||((state.sales==="all"?"everyone":state.sales)+(state.day&&state.day!=="all"?" "+weekdayName(state.day):""));
+    const text=buildIcs(meetings, conf, `${pageTitle(conf)} – ${who}`);
+    const base=`${pageTitle(conf)} ${who}`.replace(/[^\w\- ]+/g,"").replace(/\s+/g,"_");
+    try {
+      await caps.downloads.save({filename:base+".ics", data:text});
+      toast("Saved. Open the file and choose Import (Outlook) or Add All (iPhone).");
+    } catch(e){
+      if (e?.code==="declined") return;
+      if (e?.code==="rejected_extension"){
+        try { await caps.downloads.save({filename:base+".zip", data:zipSingle(base+".ics",text)}); toast("Saved as a zip. Open it and double-click the .ics inside: Import (Outlook) or Add All (iPhone)."); }
+        catch(e2){ if (e2?.code!=="declined") toast("Couldn’t save the calendar file in this view."); }
+      } else toast("Couldn’t save the calendar file in this view.");
+    }
+  }
+  $("addCal").onclick=()=>saveIcs(mySelection());
+
+  /* ----- controls ----- */
+  $("q").oninput=e=>{state.q=e.target.value; renderView();};
+  let rsT; window.addEventListener("resize",()=>{ clearTimeout(rsT); rsT=setTimeout(()=>{ if(state.view==="timeline"&&state.data) renderView(); },150); });
+  $("vTimeline").onclick=()=>{state.view="timeline"; renderView();}; $("vList").onclick=()=>{state.view="list"; renderView();};
+
+  /* ----- admin upload ----- */
+  const drop=$("drop"), fileIn=$("file");
+  ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.classList.add("over");}));
+  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.classList.remove("over");}));
+  drop.addEventListener("drop",e=>{ const f=e.dataTransfer.files[0]; if(f) handleFile(f); });
+  fileIn.onchange=()=>{ if(fileIn.files[0]) handleFile(fileIn.files[0]); fileIn.value=""; };
+  async function handleFile(f){
+    const rep=$("report"); rep.hidden=false; rep.textContent="Reading "+f.name+"…"; $("publish").disabled=true; state.pending=null;
+    try {
+      const wb=XLSX.read(await f.arrayBuffer(),{type:"array",cellDates:true});
+      const data=parseWorkbook(wb);
+      const people=[...new Set(data.coverage.map(c=>c.sales))];
+      const days=[...new Set(data.meetings.map(m=>m.date))].sort();
+      const lines=[`UPLOADED: ${f.name}`, `${data.meetings.length} meetings · ${days.map(dayLabel).join(", ")||"no days"} · ${people.join(", ")}`, ""];
+      lines.push("Issues"); lines.push(...(data.issues.length?data.issues.map(s=>"  • "+s):["  none"]), "");
+      lines.push("Warnings"); lines.push(...(data.warnings.length?data.warnings.map(s=>"  • "+s):["  none"]));
+      const diff=diffSchedules(state.live,data); state.pendingDiff=diff;
+      rep.textContent=lines.join("\n");
+      state.pending=data; $("publish").disabled=!(caps.db && data.meetings.length && (diff.count||!state.live));
+      $("pubnote").textContent = !caps.db ? "Sign in to publish." : (diff.count||!state.live) ? "Replaces the live schedule for everyone." : "Nothing to publish – this file matches the live schedule.";
+      state.status="ready"; setData(data,{preview:true}); // preview locally right away
+    } catch(err){ rep.textContent="Couldn’t read that file: "+(err.message||err); }
+  }
+  async function exportXlsx(){
+    if (!state.data||!caps.downloads) { toast(caps.downloads?"Nothing to export yet.":"Downloads aren’t available in this view."); return; }
+    try { await caps.downloads.save({filename:`${pageTitle(state.data.conf).replace(/[^\w\- ]+/g,"").replace(/\s+/g,"_")}_schedule.xlsx`, data:buildWorkbook(state.data)}); toast("Saved. Edit it, then drop it back here and publish."); }
+    catch(e){ if (e?.code!=="declined") toast("Couldn’t save the file in this view."); }
+  }
+  $("exportXlsx").onclick=exportXlsx;
+  const snapshotOf=d=>({conf:d.conf, meetings:d.meetings, coverage:d.coverage, issues:d.issues||[], warnings:d.warnings||[]});
+  async function publishSchedule(d, label){
+    const diff=diffSchedules(state.live,d);
+    const id="v"+new Date().toISOString().replace(/[-:.TZ]/g,"").slice(0,14)+"-"+Math.random().toString(36).slice(2,6);
+    const summary=label?`${label} (${describeChanges(diff,true)})`:`${state.live?"Update":"Initial upload"}: ${describeChanges(diff,true)}`;
+    const version={id, createdAt:new Date().toISOString(), summary, changes:describeChanges(diff), count:diff.count, meetings:d.meetings.length, data:snapshotOf(d)};
+    await caps.db.doc("versions/"+id).set(version);
+    await caps.db.doc("data/schedule").set({...snapshotOf(d), sample:false, versionId:id, updatedAt:version.createdAt});
+    return version;
+  }
+  $("publish").onclick=async()=>{
+    if (!state.pending||!caps.db) return;
+    const d=state.pending; $("publish").disabled=true; $("pubnote").textContent="Publishing…";
+    try { await publishSchedule(d); $("pubnote").textContent="Published."; toast("Published – everyone sees it now."); state.pending=null; loadHistory(); }
+    catch(e){ $("pubnote").textContent="Publish failed: "+(e.message||e.code||e); $("publish").disabled=false; }
+  };
+  /* ----- history ----- */
+  let histUnsub=null;
+  function loadHistory(){
+    if (!caps.db||histUnsub) return;
+    histUnsub=caps.db.collection("versions").orderBy("createdAt","desc").limit(30).onSnapshot(snap=>{ state.versions=snap.docs.map(x=>x.data()); renderHistory(); }, ()=>{ histUnsub=null; });
+  }
+  function renderHistory(){
+    const h=$("history"); const cur=state.live?.versionId;
+    if (!state.versions.length){ h.innerHTML=`<div style="font-size:13px;color:var(--ink-3)">No uploads yet. Each upload you publish is listed here.</div>`; return; }
+    h.innerHTML="";
+    state.versions.forEach((v,i)=>{
+      const det=document.createElement("details"); det.className="ver"+(v.id===cur?" cur":"");
+      const when=new Date(v.createdAt).toLocaleString("en-US",{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+      det.innerHTML=`<summary><span class="when">${esc(when)}</span><span class="sum">${esc(v.summary)}</span>${v.id===cur?'<span class="tag">live</span>':""}</summary>
+        <div class="verbody"><pre>${esc((v.changes||[]).join("\n")||"No changes recorded.")}</pre>
+        <div class="row2">${v.id===cur?(i+1<state.versions.length?`<button class="ghost" data-undo="${esc(state.versions[i+1].id)}">Undo this change</button>`:""):`<button class="ghost" data-restore="${esc(v.id)}">Restore this version</button>`}</div></div>`;
+      h.appendChild(det);
+    });
+    h.querySelectorAll("[data-restore],[data-undo]").forEach(b=>b.onclick=()=>restoreVersion(b.dataset.restore||b.dataset.undo, !!b.dataset.undo));
+  }
+  async function restoreVersion(id,isUndo){
+    const v=state.versions.find(x=>x.id===id); if(!v||!caps.db) return;
+    const when=new Date(v.createdAt).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+    if (!confirm(`${isUndo?"Undo the latest change and go back":"Restore"} to the version from ${when}? Everyone will see it.`)) return;
+    try { await publishSchedule({...v.data, issues:v.data.issues||[], warnings:v.data.warnings||[]}, isUndo?"Undo":`Restored ${when}`); toast(isUndo?"Undone.":"Restored."); }
+    catch(e){ toast("Couldn’t restore: "+(e.message||e.code||e)); }
+  }
+  $("admin").addEventListener("toggle",()=>{ if($("admin").open) loadHistory(); });
+
+  /* ----- misc ----- */
+  function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  let toastT; function toast(msg){ let t=document.querySelector(".toast"); if(!t){ t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); document.body.appendChild(t);} t.textContent=msg; clearTimeout(toastT); toastT=setTimeout(()=>t.remove(),6000); }
+
+  /* ----- static hosting (GitHub Pages etc.): no claude runtime -> read schedule.xlsx that sits next to this page ----- */
+  async function connectStatic(){
+    caps.downloads={ save: async ({filename,data})=>{ const blob=data instanceof Blob?data:new Blob([data],{type:filename.endsWith(".ics")?"text/calendar":"application/octet-stream"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},2000); return {status:"saved"}; } };
+    if (location.protocol!=="file:") for (const name of ["schedule.xlsx","conference_1x1.xlsx"]){
+      try { const r=await fetch(name+"?v="+Date.now(),{cache:"no-store"}); if(!r.ok) continue;
+        const data=parseWorkbook(XLSX.read(await r.arrayBuffer(),{type:"array",cellDates:true})); state.status="ready"; setData(data,{}); return; }
+      catch(e){ /* try the next name */ }
+    }
+    state.status="static-empty"; renderView();
+  }
+  renderView();
+  if (window.claude && typeof claude.use==="function") connect(); else connectStatic();
+})();
+</script>
+</body>
+</html>
