@@ -428,8 +428,15 @@ function eventFields(kind,m,conf){
     if (kind==="end") lines.push(`Reminder fires when the meeting ends (${fmt12(m.end)}).`);
     lines.push("");
   }
-  if (m.clientAtt) lines.push(`Client attendees: ${m.clientAtt}`); if (m.companyAtt) lines.push(`Company attendees: ${m.companyAtt}`); if (m.notes) lines.push(`Notes: ${m.notes}`);
+
+  if (m.clientAtt) lines.push(`Client attendees: ${m.clientAtt}`);
+  if (m.companyAtt) lines.push(`Company attendees: ${m.companyAtt}`);
+  if (m.sales?.length) lines.push(`Coverage: ${m.sales.map(p => p.name).join(", ")}`);
+  if (m.notes) lines.push(`Notes: ${m.notes}`);
   return {summary, body:lines.join("\n"), start:s0, end:e0, reminder, category: kind==="call"?"Conference calls":"Conference meetings", uid:`${m.id}-${kind}@conf-1x1`};
+
+
+  
 }
 const trig = min => min>=0 ? `-PT${min}M` : `PT${-min}M`;
 function buildIcs(meetings,conf,calName,styleOverride){
