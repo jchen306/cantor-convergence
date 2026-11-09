@@ -414,9 +414,12 @@ function eventFields(kind,m,conf){
   const companyLong=m.company;
   const startD=zonedToUtc(m.date,m.start,conf.tz), endD=zonedToUtc(m.date,m.end,conf.tz), dur=toMin(m.end)-toMin(m.start);
   let summary,s0,e0,reminder; const lines=[];
+
   if (kind==="call"){
-    s0=endD; e0=new Date(endD.getTime()+conf.fuLen*60000);
-    summary=`[MEETING FINISHED] ${m.client} x ${m.company}`; reminder=conf.endOff;
+    s0=endD;
+    e0=new Date(endD.getTime()+Math.max(conf.fuLen,1)*60000);
+    summary=`[MEETING FINISHED] ${m.client} x ${m.company}`;
+    reminder=conf.endOff;    
     lines.push(`${m.client} is walking out of ${companyLong} now`, "");
   } else {
     s0=startD; e0=endD;
